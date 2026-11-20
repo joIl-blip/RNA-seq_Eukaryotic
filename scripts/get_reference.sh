@@ -24,6 +24,14 @@ fi
 
 # Download transcriptome ======================================================
 
+if [ -s "$transcriptome" ]; then
+        echo "===== Transcriptome already exists. Skipping. ====="
+else
+        mkdir -p reference/transcriptome
+        echo "===== Downloading human transcriptome. ====="
+        wget "$URL/gencode.v${GENCODE_VERSION}.transcripts.fa.gz" -O "$transcriptome"
+fi
+
 # Download annotation =========================================================
 
 # Build index =================================================================
