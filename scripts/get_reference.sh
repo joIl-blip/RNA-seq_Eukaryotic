@@ -35,11 +35,11 @@ fi
 # Download annotation =========================================================
 
 if [ -s "$annotation" ]; then
-    echo "===== Annotation already exists. Skipping. ====="
+	echo "===== Annotation already exists. Skipping. ====="
 else
-    mkdir -p reference/annotation
-    echo "===== Downloading human gene annotation. ====="
-    wget -c "$URL/gencode.v${GENCODE_VERSION}.annotation.gtf.gz" -O "$annotation"
+	mkdir -p reference/annotation
+	echo "===== Downloading human gene annotation. ====="
+	wget -c "$URL/gencode.v${GENCODE_VERSION}.annotation.gtf.gz" -O "$annotation"
 fi
 
 # Build index =================================================================
