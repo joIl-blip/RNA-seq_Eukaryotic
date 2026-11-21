@@ -5,3 +5,6 @@ samples:
   - SRR1039516
   - SRR1039518
   - SRR1039521
+
+raw_dir: raw_data
+results_dir: results
