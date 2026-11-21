@@ -3,13 +3,22 @@
 samples:
   - SRR1039508
     #  - SRR1039516
-  - SRR1039518
+    #  - SRR1039518
     #  - SRR1039521
 
 raw_dir: raw_data
 results_dir: results
+hisat2_index: reference/index/hisat2/GRCh38
 
+reference:
+  genome: reference/genome/GRCh38.genome.fa
+  annotation: reference/annotation/gencode.v50.annotation.gtf
+  transcriptome: reference/transcriptome/gencode.v50.transcripts.fa
 
 trimming:
   quality: 20
   length: 20
+
+featureCounts:
+  feature: exon
+  attribute: gene_id

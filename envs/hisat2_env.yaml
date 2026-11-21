@@ -1,6 +1,9 @@
 name: hisat2
 channels:
-  - defaults
+  - conda-forge
+  - bioconda
+  - nodefaults
 dependencies:
   - hisat2
+  - samtools
 prefix: /scratch/lustre/home/gara0851/miniconda3/envs/hisat2

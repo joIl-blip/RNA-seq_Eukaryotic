@@ -1,6 +1,8 @@
 name: featureCounts
 channels:
-  - defaults
+  - conda-forge
+  - bioconda
+  - nodefaults
 dependencies:
   - subread
 prefix: /scratch/lustre/home/gara0851/miniconda3/envs/featureCounts
