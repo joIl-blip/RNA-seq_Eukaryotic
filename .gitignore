@@ -3,3 +3,4 @@ logs/
 reference/
 results/
 .snakemake/
+raw_data_unpaired/

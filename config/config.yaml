@@ -2,9 +2,14 @@
 
 samples:
   - SRR1039508
-  - SRR1039516
+    #  - SRR1039516
   - SRR1039518
-  - SRR1039521
+    #  - SRR1039521
 
 raw_dir: raw_data
 results_dir: results
+
+
+trimming:
+  quality: 20
+  length: 20

@@ -4,9 +4,12 @@ SAMPLES = config["samples"]
 RAW = config["raw_dir"]
 RESULTS = config["results_dir"]
 
+READS = [1, 2]
+
 rule all:
 	input:
-		expand(RESULTS + "/01_fastqc_raw/{sample}_{read}_fastqc.html", sample=SAMPLES, read=[1, 2])	
+		expand(RESULTS + "/01_fastqc_raw/{sample}_{read}_fastqc.html", sample=SAMPLES, read=READS),
+		expand(RESULTS + "/03_fastqc_trimmed/{sample}_{read}_val_{read}_fastqc.html", sample=SAMPLES, read=READS)
 
 # 2.1 Read preprocessing ======================================================
 
@@ -31,8 +34,48 @@ rule fastqc_raw:
 
 	# 02. Trim adapters and low-quality sequences using the tool of your choice.
 
+rule trim:
+        input:
+                r1 = RAW + "/{sample}/{sample}_1.fastq.gz",
+                r2 = RAW + "/{sample}/{sample}_2.fastq.gz"
+        output:
+                r1 = RESULTS + "/02_trimmed/{sample}_1_val_1.fq.gz",
+                r2 = RESULTS + "/02_trimmed/{sample}_2_val_2.fq.gz",
+                report1 = RESULTS + "/02_trimmed/{sample}_1.fastq.gz_trimming_report.txt",
+                report2 = RESULTS + "/02_trimmed/{sample}_2.fastq.gz_trimming_report.txt"
+        params:
+                OUT_DIR = RESULTS + "/02_trimmed",
+                quality = config["trimming"]["quality"],
+                length = config["trimming"]["length"]
+        threads: 8
+        resources:
+                mem_mb = 6000,
+                runtime = 120
+        conda: "envs/Trim_Galore_env.yaml"
+        log: "logs/raw_trimmed/{sample}.log"
+        shell:
+                "trim_galore --paired --illumina -q {params.quality} --length {params.length} --cores {threads} -o {params.OUT_DIR} {input.r1} {input.r2} > {log} 2>&1"
+
+
+
 	# 03. Evaluate the quality of processed reads.	
 
+rule fastqc_trimmed:
+        input:
+                RESULTS + "/02_trimmed/{sample}_{read}_val_{read}.fq.gz"
+        output:
+                html = RESULTS + "/03_fastqc_trimmed/{sample}_{read}_val_{read}_fastqc.html",
+                zip = RESULTS + "/03_fastqc_trimmed/{sample}_{read}_val_{read}_fastqc.zip"
+        params:
+                OUT_DIR = RESULTS + "/03_fastqc_trimmed"
+        threads: 2
+        resources:
+                mem_mb = 6000,
+                runtime = 60
+        conda: "envs/FastQC_env.yaml"
+        log: "logs/fastqc_trimmed/{sample}_{read}.log"
+        shell:
+                "fastqc -t {threads} --outdir {params.OUT_DIR} {input} > {log} 2>&1"
 
 # 2.2 Alignment-based quantification ==========================================
 
