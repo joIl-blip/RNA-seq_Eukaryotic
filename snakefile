@@ -1,6 +1,33 @@
+configfile: "config/config.yaml"
+
+SAMPLES = config["samples"]
+RAW = config["raw_dir"]
+RESULTS = config["results_dir"]
+
+rule all:
+	input:
+		expand(RESULTS + "/01_fastqc_raw/{sample}_{read}_fastqc.html", sample=SAMPLES, read=[1, 2])	
+
 # 2.1 Read preprocessing ======================================================
 
 	# 01. Evaluate the quality of raw reads using FastQC.
+
+rule fastqc_raw:
+	input:
+		RAW + "/{sample}/{sample}_{read}.fastq.gz"
+	output:
+		html = RESULTS + "/01_fastqc_raw/{sample}_{read}_fastqc.html",
+		zip = RESULTS + "/01_fastqc_raw/{sample}_{read}_fastqc.zip"
+	params:
+		OUT_DIR = RESULTS + "/01_fastqc_raw"
+	threads: 2
+	resources:
+		mem_mb = 2000,
+		runtime = 60
+	conda: "envs/FastQC_env.yaml"
+	log: "logs/fastqc_raw/{sample}_{read}.log"
+	shell:
+		"fastqc -t {threads} --outdir {params.OUT_DIR} {input} > {log} 2>&1"
 
 	# 02. Trim adapters and low-quality sequences using the tool of your choice.
 
