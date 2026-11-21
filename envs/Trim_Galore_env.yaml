@@ -1,0 +1,6 @@
+name: Trim_Galore
+channels:
+  - defaults
+dependencies:
+  - trim-galore
+prefix: /scratch/lustre/home/gara0851/miniconda3/envs/Trim_Galore

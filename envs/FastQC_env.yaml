@@ -1,0 +1,6 @@
+name: FastQC
+channels:
+  - defaults
+dependencies:
+  - fastqc
+prefix: /scratch/lustre/home/gara0851/miniconda3/envs/FastQC

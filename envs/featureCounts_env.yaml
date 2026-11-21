@@ -1,0 +1,6 @@
+name: featureCounts
+channels:
+  - defaults
+dependencies:
+  - subread
+prefix: /scratch/lustre/home/gara0851/miniconda3/envs/featureCounts

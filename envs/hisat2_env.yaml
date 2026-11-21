@@ -1,0 +1,6 @@
+name: hisat2
+channels:
+  - defaults
+dependencies:
+  - hisat2
+prefix: /scratch/lustre/home/gara0851/miniconda3/envs/hisat2

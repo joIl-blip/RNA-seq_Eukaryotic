@@ -1,0 +1,6 @@
+name: deepTools
+channels:
+  - defaults
+dependencies:
+  - deeptools
+prefix: /scratch/lustre/home/gara0851/miniconda3/envs/deepTools

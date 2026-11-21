@@ -1,0 +1,6 @@
+name: RSeQC
+channels:
+  - defaults
+dependencies:
+  - rseqc
+prefix: /scratch/lustre/home/gara0851/miniconda3/envs/RSeQC
