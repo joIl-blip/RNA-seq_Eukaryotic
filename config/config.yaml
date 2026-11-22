@@ -11,6 +11,7 @@ results_dir: results
 
 hisat2_index: reference/index/hisat2/GRCh38
 kallisto_index: reference/index/kallisto/gencode.v50.idx
+gene_model_bed: reference/annotation/gencode.v50.annotation.bed
 
 reference:
   genome: reference/genome/GRCh38.genome.fa

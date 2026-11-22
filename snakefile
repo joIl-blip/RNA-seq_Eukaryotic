@@ -10,6 +10,7 @@ ANNOTATION = config["reference"]["annotation"]
 
 HISAT2_INDEX = config["hisat2_index"]
 KALLISTO_INDEX = config["kallisto_index"]
+GENE_MODEL_BED = config["gene_model_bed"]
 
 READS = [1, 2]
 
@@ -21,7 +22,8 @@ rule all:
 		"reference/transcriptome/gencode.v50.transcripts.fa",
 		"reference/annotation/gencode.v50.annotation.gtf",
 		RESULTS + "/05_featureCounts/counts.txt",
-		expand(RESULTS + "/06_kallisto/{sample}/abundance.tsv", sample=SAMPLES)
+		expand(RESULTS + "/06_kallisto/{sample}/abundance.tsv", sample=SAMPLES),
+		expand(RESULTS + "/07_rseqc_stat/{sample}.bam_stat.txt", sample=SAMPLES)
 
 # 2.1 Read preprocessing ======================================================
 
@@ -217,8 +219,54 @@ rule quantify_kallisto:
 		"kallisto quant -i {input.index} -o {params.OUT_DIR} -t {threads} {input.r1} {input.r2} 2> {log}"
 
 # 2.4 Alignment quality assessment (using RSeQC and deepTools) ================
+
+rule index_bam:
+	input:
+		RESULTS + "/04_mapping/{sample}.bam"
+	output:
+		RESULTS + "/04_mapping/{sample}.bam.bai"
+	resources:
+		mem_mb = 6000,
+		runtime = 120
+	conda: "envs/hisat2_env.yaml"
+	log: "logs/index_bam/{sample}.log"
+	shell:
+		"samtools index {input} > {log} 2>&1"
+
+# BED file needed for RSeQC.
+rule gtf_to_bed:
+	input:
+		ANNOTATION
+	output:
+		bed = GENE_MODEL_BED,
+		genepred = temp(GENE_MODEL_BED + ".genePred")
+	resources:
+		mem_mb = 6000,
+		runtime = 120
+	conda: "envs/ucsc_env.yaml"
+	log: "logs/gtf_to_bed/gtf_to_bed.log"
+	shell:
+		"gtfToGenePred -genePredExt {input} {output.genepred} > {log} 2>&1 && genePredToBed {output.genepred} {output.bed} >> {log} 2>&1"
+
 # 09. Alignment statistics
+
+rule rseqc_align_stat:
+	input:
+		RESULTS + "/04_mapping/{sample}.bam"
+	output:
+		RESULTS + "/07_rseqc_stat/{sample}.bam_stat.txt"
+	resources:
+		mem_mb = 6000,
+		runtime = 120
+	conda: "envs/RSeQC_env.yaml"
+	log: "logs/rseqc_align_stat/{sample}.log"
+	shell:
+		"bam_stat.py -i {input} > {output} 2> {log}"
+
 # 10. RNA-seq library strandedness
+
+
+
 # 11. Read distribution across genomic features
 # 12. Gene body coverage
 # 13. Insert size/fragment length distribution
