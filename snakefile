@@ -23,7 +23,8 @@ rule all:
 		"reference/annotation/gencode.v50.annotation.gtf",
 		RESULTS + "/05_featureCounts/counts.txt",
 		expand(RESULTS + "/06_kallisto/{sample}/abundance.tsv", sample=SAMPLES),
-		expand(RESULTS + "/07_rseqc_stat/{sample}.bam_stat.txt", sample=SAMPLES)
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.bam_stat.txt", sample=SAMPLES),
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.infer_experiment.txt", sample=SAMPLES)
 
 # 2.1 Read preprocessing ======================================================
 
@@ -254,7 +255,7 @@ rule rseqc_align_stat:
 	input:
 		RESULTS + "/04_mapping/{sample}.bam"
 	output:
-		RESULTS + "/07_rseqc_stat/{sample}.bam_stat.txt"
+		RESULTS + "/07_rseqc/{sample}/{sample}.bam_stat.txt"
 	resources:
 		mem_mb = 6000,
 		runtime = 120
@@ -265,7 +266,20 @@ rule rseqc_align_stat:
 
 # 10. RNA-seq library strandedness
 
-
+rule rseqc_infer_experiment:
+	input:
+		bam = RESULTS + "/04_mapping/{sample}.bam",
+		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
+		bed = GENE_MODEL_BED
+	output:
+		RESULTS + "/07_rseqc/{sample}/{sample}.infer_experiment.txt"
+	resources:
+		mem_mb = 6000,
+		runtime = 120
+	conda: "envs/RSeQC_env.yaml"
+	log: "logs/rseqc_infer_experiment/{sample}.log"
+	shell:
+		"infer_experiment.py -r {input.bed} -i {input.bam} > {output} 2> {log}"
 
 # 11. Read distribution across genomic features
 # 12. Gene body coverage
