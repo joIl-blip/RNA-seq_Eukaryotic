@@ -8,7 +8,9 @@ samples:
 
 raw_dir: raw_data
 results_dir: results
+
 hisat2_index: reference/index/hisat2/GRCh38
+kallisto_index: reference/index/kallisto/gencode.v50.idx
 
 reference:
   genome: reference/genome/GRCh38.genome.fa

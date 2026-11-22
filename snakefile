@@ -7,8 +7,9 @@ RESULTS = config["results_dir"]
 GENOME = config["reference"]["genome"]
 TRANSCRIPTOME = config["reference"]["transcriptome"]
 ANNOTATION = config["reference"]["annotation"]
-HISAT2_INDEX = config["hisat2_index"]
 
+HISAT2_INDEX = config["hisat2_index"]
+KALLISTO_INDEX = config["kallisto_index"]
 
 READS = [1, 2]
 
@@ -19,7 +20,8 @@ rule all:
 		"reference/genome/GRCh38.genome.fa",
 		"reference/transcriptome/gencode.v50.transcripts.fa",
 		"reference/annotation/gencode.v50.annotation.gtf",
-		RESULTS + "/05_featureCounts/counts.txt"
+		RESULTS + "/05_featureCounts/counts.txt",
+		expand(RESULTS + "/06_kallisto/{sample}/abundance.tsv", sample=SAMPLES)
 
 # 2.1 Read preprocessing ======================================================
 
@@ -178,7 +180,41 @@ rule quantify_expression:
 # 2.3 Alignment-free quantification ===========================================
 
 # 07. Build a kallisto/salmon index if it is not present.
+
+rule kallisto_index:
+	input:
+		TRANSCRIPTOME
+	output:
+		KALLISTO_INDEX
+	threads: 8
+	resources:
+		mem_mb = 24000,
+		runtime = 120
+	conda: "envs/kallisto_env.yaml"
+	log: "logs/kallisto_index/kallisto_index.log"
+	shell:
+		"kallisto index -t {threads} -i {output} {input} > {log} 2>&1"
+
 # 08. Quantify transcript abundance for all samples using kallisto.
+
+rule quantify_kallisto:
+	input:
+		index = KALLISTO_INDEX,
+		r1 = RESULTS + "/02_trimmed/{sample}_1_val_1.fq.gz",
+		r2 = RESULTS + "/02_trimmed/{sample}_2_val_2.fq.gz"
+	output:
+		abundance = RESULTS + "/06_kallisto/{sample}/abundance.tsv",
+		run_info = RESULTS + "/06_kallisto/{sample}/run_info.json"
+	params:
+		OUT_DIR = RESULTS + "/06_kallisto/{sample}"
+	threads: 8
+	resources:
+		mem_mb = 12000,
+		runtime = 120
+	conda: "envs/kallisto_env.yaml"
+	log: "logs/kallisto_quant/{sample}.log"
+	shell:
+		"kallisto quant -i {input.index} -o {params.OUT_DIR} -t {threads} {input.r1} {input.r2} 2> {log}"
 
 # 2.4 Alignment quality assessment (using RSeQC and deepTools) ================
 # 09. Alignment statistics
