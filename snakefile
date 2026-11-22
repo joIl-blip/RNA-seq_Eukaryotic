@@ -25,7 +25,9 @@ rule all:
 		expand(RESULTS + "/06_kallisto/{sample}/abundance.tsv", sample=SAMPLES),
 		expand(RESULTS + "/07_rseqc/{sample}/{sample}.bam_stat.txt", sample=SAMPLES),
 		expand(RESULTS + "/07_rseqc/{sample}/{sample}.infer_experiment.txt", sample=SAMPLES),
-		expand(RESULTS + "/07_rseqc/{sample}/{sample}.read_distribution.txt", sample=SAMPLES)
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.read_distribution.txt", sample=SAMPLES),
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.geneBodyCoverage.txt", sample=SAMPLES),
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.inner_distance_freq.txt", sample=SAMPLES)
 
 # 2.1 Read preprocessing ======================================================
 
@@ -300,7 +302,43 @@ rule rseqc_read_distrubution:
 		"read_distribution.py -r {input.bed} -i {input.bam} > {output} 2> {log}"
 
 # 12. Gene body coverage
+
+rule rseqc_gene_body_coverage:
+	input:
+		bam = RESULTS + "/04_mapping/{sample}.bam",
+		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
+		bed = GENE_MODEL_BED
+	output:
+		RESULTS + "/07_rseqc/{sample}/{sample}.geneBodyCoverage.txt"
+	params:
+		PREFIX = RESULTS + "/07_rseqc/{sample}/{sample}"
+	resources:
+		mem_mb = 6000,
+		runtime = 120
+	conda: "envs/RSeQC_env.yaml"
+	log: "logs/rseqc_gene_body_coverage/{sample}.log"
+	shell:
+		"geneBody_coverage.py -r {input.bed} -i {input.bam} -o {params.PREFIX} > {log} 2>&1"
+
 # 13. Insert size/fragment length distribution
+
+rule rseqc_length_distribution:
+	input:
+		bam = RESULTS + "/04_mapping/{sample}.bam",
+		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
+		bed = GENE_MODEL_BED
+	output:
+		RESULTS + "/07_rseqc/{sample}/{sample}.inner_distance_freq.txt"
+	params:
+		PREFIX = RESULTS + "/07_rseqc/{sample}/{sample}"
+	resources:
+		mem_mb = 12000,
+		runtime = 120
+	conda: "envs/RSeQC_env.yaml"
+	log: "logs/rseqc_length_distribution/{sample}.log"
+	shell:
+		"inner_distance.py -r {input.bed} -i {input.bam} -o {params.PREFIX} > {log} 2>&1"
+
 # 14. Correlation between samples
 # 15. Principal component analysis (PCA)
 
