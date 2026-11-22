@@ -24,7 +24,8 @@ rule all:
 		RESULTS + "/05_featureCounts/counts.txt",
 		expand(RESULTS + "/06_kallisto/{sample}/abundance.tsv", sample=SAMPLES),
 		expand(RESULTS + "/07_rseqc/{sample}/{sample}.bam_stat.txt", sample=SAMPLES),
-		expand(RESULTS + "/07_rseqc/{sample}/{sample}.infer_experiment.txt", sample=SAMPLES)
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.infer_experiment.txt", sample=SAMPLES),
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.read_distribution.txt", sample=SAMPLES)
 
 # 2.1 Read preprocessing ======================================================
 
@@ -282,6 +283,22 @@ rule rseqc_infer_experiment:
 		"infer_experiment.py -r {input.bed} -i {input.bam} > {output} 2> {log}"
 
 # 11. Read distribution across genomic features
+
+rule rseqc_read_distrubution:
+	input:
+		bam = RESULTS + "/04_mapping/{sample}.bam",
+		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
+		bed = GENE_MODEL_BED
+	output:
+		RESULTS + "/07_rseqc/{sample}/{sample}.read_distribution.txt"
+	resources:
+		mem_mb = 6000,
+		runtime = 120
+	conda: "envs/RSeQC_env.yaml"
+	log: "logs/rseqc_read_distribution/{sample}.log"
+	shell:
+		"read_distribution.py -r {input.bed} -i {input.bam} > {output} 2> {log}"
+
 # 12. Gene body coverage
 # 13. Insert size/fragment length distribution
 # 14. Correlation between samples
