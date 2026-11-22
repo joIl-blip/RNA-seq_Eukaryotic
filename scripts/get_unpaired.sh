@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-id="SRR1039516"
+id="SRR1039521"
 OUTPUT_DIR="raw_data/$id"
 
 echo "===== Downloading $id. ====="

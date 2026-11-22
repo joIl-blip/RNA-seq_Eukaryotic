@@ -12,6 +12,8 @@ HISAT2_INDEX = config["hisat2_index"]
 KALLISTO_INDEX = config["kallisto_index"]
 GENE_MODEL_BED = config["gene_model_bed"]
 
+RSEQC_REPORTS = ["bam_stat.txt", "infer_experiment.txt", "read_distribution.txt"]
+
 READS = [1, 2]
 
 rule all:
@@ -26,8 +28,9 @@ rule all:
 		expand(RESULTS + "/07_rseqc/{sample}/{sample}.bam_stat.txt", sample=SAMPLES),
 		expand(RESULTS + "/07_rseqc/{sample}/{sample}.infer_experiment.txt", sample=SAMPLES),
 		expand(RESULTS + "/07_rseqc/{sample}/{sample}.read_distribution.txt", sample=SAMPLES),
-		expand(RESULTS + "/07_rseqc/{sample}/{sample}.geneBodyCoverage.txt", sample=SAMPLES),
-		expand(RESULTS + "/07_rseqc/{sample}/{sample}.inner_distance_freq.txt", sample=SAMPLES)
+#		expand(RESULTS + "/07_rseqc/{sample}/{sample}.geneBodyCoverage.txt", sample=SAMPLES),
+#		expand(RESULTS + "/07_rseqc/{sample}/{sample}.inner_distance_freq.txt", sample=SAMPLES)
+		RESULTS + "/08_MultiQC/multiqc_report.html"
 
 # 2.1 Read preprocessing ======================================================
 
@@ -303,42 +306,68 @@ rule rseqc_read_distrubution:
 
 # 12. Gene body coverage
 
-rule rseqc_gene_body_coverage:
-	input:
-		bam = RESULTS + "/04_mapping/{sample}.bam",
-		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
-		bed = GENE_MODEL_BED
-	output:
-		RESULTS + "/07_rseqc/{sample}/{sample}.geneBodyCoverage.txt"
-	params:
-		PREFIX = RESULTS + "/07_rseqc/{sample}/{sample}"
-	resources:
-		mem_mb = 6000,
-		runtime = 120
-	conda: "envs/RSeQC_env.yaml"
-	log: "logs/rseqc_gene_body_coverage/{sample}.log"
-	shell:
-		"geneBody_coverage.py -r {input.bed} -i {input.bam} -o {params.PREFIX} > {log} 2>&1"
+#rule rseqc_gene_body_coverage:
+#	input:
+#		bam = RESULTS + "/04_mapping/{sample}.bam",
+#		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
+#		bed = GENE_MODEL_BED
+#	output:
+#		RESULTS + "/07_rseqc/{sample}/{sample}.geneBodyCoverage.txt"
+#	params:
+#		PREFIX = RESULTS + "/07_rseqc/{sample}/{sample}"
+#	resources:
+#		mem_mb = 6000,
+#		runtime = 120
+#	conda: "envs/RSeQC_env.yaml"
+#	log: "logs/rseqc_gene_body_coverage/{sample}.log"
+#	shell:
+#		"geneBody_coverage.py -r {input.bed} -i {input.bam} -o {params.PREFIX} > {log} 2>&1"
 
 # 13. Insert size/fragment length distribution
 
-rule rseqc_length_distribution:
-	input:
-		bam = RESULTS + "/04_mapping/{sample}.bam",
-		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
-		bed = GENE_MODEL_BED
-	output:
-		RESULTS + "/07_rseqc/{sample}/{sample}.inner_distance_freq.txt"
-	params:
-		PREFIX = RESULTS + "/07_rseqc/{sample}/{sample}"
-	resources:
-		mem_mb = 12000,
-		runtime = 120
-	conda: "envs/RSeQC_env.yaml"
-	log: "logs/rseqc_length_distribution/{sample}.log"
-	shell:
-		"inner_distance.py -r {input.bed} -i {input.bam} -o {params.PREFIX} > {log} 2>&1"
+#rule rseqc_length_distribution:
+#	input:
+#		bam = RESULTS + "/04_mapping/{sample}.bam",
+#		bai = RESULTS + "/04_mapping/{sample}.bam.bai",
+#		bed = GENE_MODEL_BED
+#	output:
+#		RESULTS + "/07_rseqc/{sample}/{sample}.inner_distance_freq.txt"
+#	params:
+#		PREFIX = RESULTS + "/07_rseqc/{sample}/{sample}"
+#	resources:
+#		mem_mb = 12000,
+#		runtime = 120
+#	conda: "envs/RSeQC_env.yaml"
+#	log: "logs/rseqc_length_distribution/{sample}.log"
+#	shell:
+#		"inner_distance.py -r {input.bed} -i {input.bam} -o {params.PREFIX} > {log} 2>&1"
 
 # 14. Correlation between samples
 # 15. Principal component analysis (PCA)
 
+rule multiqc:
+	input:
+		expand(RESULTS + "/01_fastqc_raw/{sample}_{read}_fastqc.zip", sample=SAMPLES, read=READS),
+		expand(RESULTS + "/02_trimmed/{sample}_{read}.fastq.gz_trimming_report.txt", sample=SAMPLES, read=READS),
+		expand(RESULTS + "/03_fastqc_trimmed/{sample}_{read}_val_{read}_fastqc.zip", sample=SAMPLES, read=READS),
+		expand("logs/hisat2/{sample}.log", sample=SAMPLES),
+		RESULTS + "/05_featureCounts/counts.txt.summary",
+		expand(RESULTS + "/06_kallisto/{sample}/run_info.json", sample=SAMPLES),
+		expand(RESULTS + "/07_rseqc/{sample}/{sample}.{report}", sample=SAMPLES, report=RSEQC_REPORTS)
+	output:
+		RESULTS + "/08_MultiQC/multiqc_report.html"
+	params:
+		OUT_DIR = RESULTS + "/08_MultiQC",
+		SCAN_DIRS = RESULTS + " logs"
+	resources:
+		mem_mb = 6000,
+		runtime = 60
+	conda: "envs/MultiQC_env.yaml"
+	log: "logs/MultiQC/multiqc.log"
+	shell:
+		"""
+		mkdir -p {params.OUT_DIR}
+		mkdir -p logs/MultiQC
+		
+		multiqc {params.SCAN_DIRS} --outdir {params.OUT_DIR} --filename multiqc_report.html --force > {log} 2>&1
+		"""

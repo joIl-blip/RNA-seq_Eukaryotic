@@ -1,6 +1,8 @@
-name: multiqc
+name: MultiQC
 channels:
-  - defaults
+  - conda-forge
+  - bioconda
+  - nodefaults
 dependencies:
   - multiqc
 prefix: /scratch/lustre/home/gara0851/miniconda3/envs/multiqc
